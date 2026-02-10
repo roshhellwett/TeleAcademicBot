@@ -21,3 +21,4 @@ async def broadcast(notifications):
                 pass
 
     db.close()
+#@roshhellwett makaut tele bot

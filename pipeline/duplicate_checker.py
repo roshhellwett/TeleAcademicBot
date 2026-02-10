@@ -8,3 +8,4 @@ def is_duplicate(hash_value):
     ).first()
     db.close()
     return exists is not None
+#@roshhellwett makaut tele bot

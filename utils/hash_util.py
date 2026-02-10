@@ -7,3 +7,4 @@ def generate_hash(title: str, url: str) -> str:
     """
     raw = f"{title}|{url}"
     return hashlib.sha256(raw.encode()).hexdigest()
+#@roshhellwett makaut tele bot

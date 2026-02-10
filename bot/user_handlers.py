@@ -116,3 +116,4 @@ def register_user_handlers(app):
     app.add_handler(CommandHandler("latest", latest_cmd))
     app.add_handler(CommandHandler("status", status_cmd))
     app.add_handler(CommandHandler("help", help_cmd))
+#@roshhellwett makaut tele bot

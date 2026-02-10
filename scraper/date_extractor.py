@@ -22,3 +22,4 @@ def extract_date(text, pdf_url=None):
             return datetime(int(m.group()), 1, 1)
 
     return None
+#@roshhellwett makaut tele bot

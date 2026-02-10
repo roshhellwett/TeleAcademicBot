@@ -23,3 +23,4 @@ class Subscriber(Base):
     id = Column(Integer, primary_key=True)
     telegram_id = Column(String, unique=True)
     active = Column(Boolean, default=True)
+#@roshhellwett makaut tele bot

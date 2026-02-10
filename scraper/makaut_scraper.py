@@ -149,3 +149,4 @@ def scrape_all_sources():
         logger.error(f"SCRAPE ALL ERROR {e}")
 
     return all_data
+#@roshhellwett makaut tele bot

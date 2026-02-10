@@ -60,3 +60,4 @@ async def start_pipeline():
 
         logger.info("SCRAPE CYCLE DONE")
         await asyncio.sleep(SCRAPE_INTERVAL)
+#@roshhellwett makaut tele bot

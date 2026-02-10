@@ -21,3 +21,4 @@ async def broadcast_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def register_admin_handlers(app):
     app.add_handler(CommandHandler("admin", admin_cmd))
     app.add_handler(CommandHandler("broadcast", broadcast_cmd))
+#@roshhellwett makaut tele bot

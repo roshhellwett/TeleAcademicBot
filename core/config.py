@@ -13,3 +13,4 @@ DATABASE_URL = os.getenv(
 ADMIN_ID = int(os.getenv("ADMIN_ID", "7940390110"))
 
 SCRAPE_INTERVAL = int(os.getenv("SCRAPE_INTERVAL", "300"))
+#@roshhellwett makaut tele bot
