@@ -1,19 +1,28 @@
 import asyncio
 import logging
+
 from database.db import SessionLocal
 from database.models import Subscriber
-from pipeline.message_formatter import format_message
 from bot.telegram_app import get_bot
+from pipeline.message_formatter import format_message
 
 logger = logging.getLogger("BROADCASTER")
 
 
 async def broadcast(notifications):
 
-    bot = get_bot()
+    # Wait until telegram ready
+    while True:
+        try:
+            bot = get_bot()
+            break
+        except:
+            logger.info("WAITING TELEGRAM READY...")
+            await asyncio.sleep(2)
 
     db = SessionLocal()
-    subs = db.query(Subscriber).filter_by(active=True).all()
+
+    users = db.query(Subscriber).filter_by(active=True).all()
 
     success = 0
     failed = 0
@@ -22,12 +31,13 @@ async def broadcast(notifications):
 
         msg = format_message(n)
 
-        for sub in subs:
+        for u in users:
+
             try:
                 await bot.send_message(
-                    chat_id=sub.telegram_id,
+                    chat_id=u.telegram_id,
                     text=msg,
-                    disable_web_page_preview=False
+                    disable_web_page_preview=True
                 )
 
                 success += 1
@@ -35,7 +45,7 @@ async def broadcast(notifications):
 
             except Exception as e:
                 failed += 1
-                logger.error(f"BROADCAST FAIL {sub.telegram_id} {e}")
+                logger.error(f"SEND FAIL {u.telegram_id} {e}")
 
     db.close()
 
