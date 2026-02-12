@@ -39,8 +39,7 @@ async def start_group_bot():
             "<b>⚖️ Group Rules:</b>\n"
             "• No abusive language or personal attacks.\n"
             "• No spamming or unauthorized links.\n"
-            "• MAKAUT UNIVERSITY HAS BEEN INTEGRATED\n\n"
-            "<i>Pin this message for easy access!</i>"
+            "* MAKAUT UNIVERSITY HAS BEEN INTEGRATED *\n\n"
         )
         return await context.bot.send_message(chat_id=chat_id, text=text, parse_mode="HTML", reply_markup=reply_markup)
 
