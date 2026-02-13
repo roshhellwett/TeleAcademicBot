@@ -3,7 +3,7 @@
 
 **AcademicTeleBot** is a distributed, production-grade academic automation ecosystem engineered for **high-volume student networks**, **real-time institutional intelligence**, and **autonomous moderation at scale**.
 
-Built using asynchronous microservice principles, the platform combines **intelligent data ingestion**, **forensic document analysis**, and **high-throughput messaging orchestration** to deliver mission-critical academic notifications with near-zero latency.
+Built using asynchronous microservice principles, the platform combines **intelligent data ingestion**, **forensic document analysis**, and **high-throughput messaging orchestration** to deliver mission-critical academic notifications with near-zero latency...
 
 ---
 
