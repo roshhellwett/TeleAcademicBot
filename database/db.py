@@ -1,29 +1,18 @@
 import logging
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy.pool import StaticPool
 from core.config import DATABASE_URL
 
 logger = logging.getLogger("DATABASE")
 
-# SMART PROTOCOL CHECK: Prevents malformed URLs and unpacking errors
-if "aiosqlite" in DATABASE_URL:
-    ASYNC_DB_URL = DATABASE_URL
-else:
-    if DATABASE_URL.startswith("sqlite:///"):
-        ASYNC_DB_URL = DATABASE_URL.replace("sqlite:///", "sqlite+aiosqlite:///")
-    elif DATABASE_URL.startswith("sqlite://"):
-        ASYNC_DB_URL = DATABASE_URL.replace("sqlite://", "sqlite+aiosqlite://")
-    else:
-        ASYNC_DB_URL = DATABASE_URL
-
-# Standard SQLAlchemy 2.0 Async engine with multi-thread safety for SQLite
+# Railway Optimization: Connection Pooling
+# We use a modest pool size to prevent exhausting Postgres connections
 engine = create_async_engine(
-    ASYNC_DB_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-    future=True,
-    echo=False
+    DATABASE_URL,
+    echo=False,
+    pool_size=10,
+    max_overflow=20,
+    pool_pre_ping=True  # Auto-reconnect if Railway kills idle connection
 )
 
 AsyncSessionLocal = sessionmaker(
@@ -34,5 +23,6 @@ AsyncSessionLocal = sessionmaker(
 )
 
 Base = declarative_base()
-logger.info(f"DATABASE ENGINE READY (ASYNC MODE: {ASYNC_DB_URL.split('+')[0]})")
+
+logger.info("✅ DATABASE: PostgreSQL Connection Pool Initialized")
 #@academictelebotbyroshhellwett
