@@ -27,12 +27,12 @@ async def verify_system():
             await conn.execute(text("SELECT 1"))
             print(f"✅ DATABASE: PostgreSQL Connection Pool ACTIVE")
             
-            # Check if Security Tables exist (Migration Verification)
-            result = await conn.execute(text("SELECT to_regclass('public.user_strikes')"))
+            # FIX: Check for the NEW table name 'user_strikes_v2'
+            result = await conn.execute(text("SELECT to_regclass('public.user_strikes_v2')"))
             if result.scalar():
-                print(f"✅ SECURITY: Table 'user_strikes' FOUND")
+                print(f"✅ SECURITY: Table 'user_strikes_v2' FOUND")
             else:
-                print(f"⚠️ SECURITY: Table 'user_strikes' NOT FOUND (Will be created on init)")
+                print(f"⚠️ SECURITY: Table 'user_strikes_v2' NOT FOUND (Will be created on init)")
                 
     except Exception as e:
         print(f"❌ DATABASE FATAL ERROR: {e}")
