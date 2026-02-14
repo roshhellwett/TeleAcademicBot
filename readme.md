@@ -120,5 +120,5 @@ Stay tuned for future public releases and ecosystem expansion.
 
 ---
 
-© 2026 Zenith Infrastructure. All Rights Reserved.  
+© 2026 [Zenith Projects](https://zenithprojects.up.railway.app/). All Rights Reserved.  
 Open Source Components Released Under Respective Licenses.
