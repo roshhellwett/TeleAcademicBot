@@ -1,4 +1,5 @@
 import os
+import re
 import asyncio
 from uuid import uuid4
 from dotenv import load_dotenv
@@ -19,12 +20,35 @@ async def worker(app_context):
     while True:
         try:
             update, context, placeholder_msg, text, image_bytes, history_text = await task_queue.get()
+            
             try:
                 ai_response = await process_ai_query(text, image_bytes, history_text)
                 clean_html = sanitize_telegram_html(ai_response)
-                if len(clean_html) > 4000: clean_html = clean_html[:4000] + "\n\n<i>[Truncated]</i>"
+                
+                # Safe Truncation
+                if len(clean_html) > 4000: 
+                    clean_html = clean_html[:4000] + "\n\n<i>[Truncated due to Telegram limits]</i>"
                     
-                await context.bot.edit_message_text(chat_id=placeholder_msg.chat_id, message_id=placeholder_msg.message_id, text=clean_html, parse_mode="HTML", disable_web_page_preview=True)
+                # 🚀 ATTEMPT 1: Send beautiful HTML
+                try:
+                    await context.bot.edit_message_text(
+                        chat_id=placeholder_msg.chat_id, 
+                        message_id=placeholder_msg.message_id, 
+                        text=clean_html, 
+                        parse_mode="HTML", 
+                        disable_web_page_preview=True
+                    )
+                except Exception as html_err:
+                    logger.warning(f"HTML Parse Error, engaging fallback: {html_err}")
+                    # 🚀 ATTEMPT 2: Fallback to plain text if HTML crashes
+                    plain_text = re.sub(r'<[^>]+>', '', clean_html) # Strip all HTML tags
+                    await context.bot.edit_message_text(
+                        chat_id=placeholder_msg.chat_id, 
+                        message_id=placeholder_msg.message_id, 
+                        text=plain_text, 
+                        disable_web_page_preview=True
+                    )
+
             except Exception as e:
                 logger.error(f"Worker Error: {e}")
                 try: await context.bot.edit_message_text(chat_id=placeholder_msg.chat_id, message_id=placeholder_msg.message_id, text="❌ An error occurred formatting the AI report.")
@@ -50,7 +74,6 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
     placeholder = await update.message.reply_text("📥 Reading PDF... (Scanning first 5 pages)")
     file = await context.bot.get_file(doc.file_id)
     
-    # Bug Fix: Safe Unique Identifier Generation to prevent collision
     path = f"temp_{uuid4().hex}.pdf"
     
     try:
@@ -109,7 +132,8 @@ async def inline_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.inline_query.query.strip()
     if not query: return
     results = [InlineQueryResultArticle(
-        id=str(uuid4()), title=f"🔍 Ask Zenith: {query}",
+        id=str(uuid4()), 
+        title=f"🔍 Ask Zenith: {query}",
         input_message_content=InputTextMessageContent(f"/zenithai {query}"),
         description="Tap here to trigger high-speed AI research. (Safe Mode)"
     )]
@@ -120,22 +144,41 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(welcome_text, parse_mode="HTML")
     
 async def cmd_zenithai(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # 1. Safely handle both new messages and edited messages
+    msg = update.message or update.edited_message
+    if not msg: return
+
     allowed, reason = await check_ai_rate_limit(update.effective_user.id)
-    if not allowed: return await update.message.reply_text(reason)
+    if not allowed: return await msg.reply_text(reason)
 
-    text = " ".join(context.args) if context.args else (update.message.caption.replace("/zenithai", "").strip() if update.message.caption else "")
-    if not text and not update.message.photo: return await update.message.reply_text("Please provide a question, link, or image!")
+    # 2. Safely extract text from the command or caption
+    text = " ".join(context.args) if context.args else ""
+    if not text and msg.caption:
+        text = msg.caption.replace("/zenithai", "").strip()
 
+    # 3. Look for an image in the current message
+    photo_list = msg.photo
+
+    # 4. 🚀 MASSIVE UPGRADE: Look for an image in a REPLIED message
+    history_text = None
+    if msg.reply_to_message:
+        # If the user replied to an image, grab that image!
+        if not photo_list and msg.reply_to_message.photo:
+            photo_list = msg.reply_to_message.photo
+        # Grab any context text from the replied message
+        history_text = msg.reply_to_message.text or msg.reply_to_message.caption
+
+    # 5. Fail gracefully if nothing is found
+    if not text and not photo_list: 
+        return await msg.reply_text("Please provide a question, link, or image! (💡 Pro-tip: You can upload an image, then reply to it with /zenithai)")
+
+    # 6. Process the image
     image_bytes = None
-    if update.message.photo:
-        file = await context.bot.get_file(update.message.photo[-1].file_id)
+    if photo_list:
+        file = await context.bot.get_file(photo_list[-1].file_id)
         image_bytes = await file.download_as_bytearray()
 
-    history_text = None
-    if update.message.reply_to_message:
-        history_text = update.message.reply_to_message.text or update.message.reply_to_message.caption
-
-    placeholder = await update.message.reply_text("⏳ Processing your research query...")
+    placeholder = await msg.reply_text("⏳ Processing your research query...")
     await task_queue.put((update, context, placeholder, text, image_bytes, history_text))
 
 async def main():
